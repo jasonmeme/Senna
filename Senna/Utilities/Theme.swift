@@ -39,6 +39,18 @@ extension View {
             .cornerRadius(Theme.cornerRadius)
     }
     
+    func socialButtonStyle() -> some View {
+        self
+            .frame(maxWidth: Theme.maxWidth, minHeight: Theme.buttonHeight)
+            .padding(.horizontal)
+            .background(Color(.systemBackground))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                    .stroke(Color(.separator), lineWidth: 1)
+            )
+            .cornerRadius(Theme.cornerRadius)
+    }
+    
     func textFieldStyle() -> some View {
         self
             .textFieldStyle(.plain)
@@ -53,7 +65,6 @@ extension View {
             .padding()
             .background(Theme.secondaryBackgroundColor)
             .cornerRadius(Theme.cornerRadius)
-            .shadow(radius: 2)
     }
 }
 
