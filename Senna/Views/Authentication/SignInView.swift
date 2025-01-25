@@ -5,21 +5,59 @@ struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var showAlert = false
+    @State private var isEmailFocused = false
+    @State private var isPasswordFocused = false
     
     var body: some View {
-        VStack(spacing: Theme.spacing) {
+        VStack(spacing: Theme.spacing * 1.5) {
+            // Logo and Welcome Text
+            VStack(spacing: 8) {
+                Image("AppIcon") // Make sure to add your app icon
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
+                    .cornerRadius(20)
+                
+                Text("Sign in to continue")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.bottom, Theme.spacing)
+            
             // Email field
-            TextField("Email", text: $email)
-                .textContentType(.emailAddress)
-                .autocapitalization(.none)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 300)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Email")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                TextField("", text: $email)
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                    .textFieldStyle()
+            }
             
             // Password field
-            SecureField("Password", text: $password)
-                .textContentType(.password)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 300)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Password")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                SecureField("", text: $password)
+                    .textContentType(.password)
+                    .textFieldStyle()
+            }
+            
+            // Forgot Password
+            HStack {
+                Spacer()
+                Button("Forgot Password?") {
+                    // Handle forgot password
+                }
+                .font(.subheadline)
+                .foregroundColor(Theme.accentColor)
+            }
+            .padding(.bottom, Theme.spacing)
             
             // Sign in button
             Button {
@@ -36,32 +74,48 @@ struct SignInView: View {
                         .tint(.white)
                 } else {
                     Text("Sign In")
-                        .frame(maxWidth: 300)
+                        .fontWeight(.semibold)
                 }
             }
             .primaryButtonStyle()
             .disabled(email.isEmpty || password.isEmpty || authManager.isLoading)
+            
+            // Divider
+            HStack {
+                VStack { Divider() }
+                Text("or")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                VStack { Divider() }
+            }
+            .padding(.vertical, Theme.spacing)
             
             // Social sign in options
             HStack(spacing: Theme.spacing) {
                 Button {
                     // Apple sign in
                 } label: {
-                    Image(systemName: "apple.logo")
-                        .font(.title2)
+                    HStack {
+                        Image(systemName: "apple.logo")
+                        Text("Sign in with Apple")
+                    }
+                    .fontWeight(.semibold)
                 }
-                .buttonStyle(.bordered)
+                .secondaryButtonStyle()
                 
                 Button {
                     // Google sign in
                 } label: {
-                    Image(systemName: "g.circle.fill")
-                        .font(.title2)
+                    HStack {
+                        Image(systemName: "g.circle.fill")
+                        Text("Google")
+                    }
+                    .fontWeight(.semibold)
                 }
-                .buttonStyle(.bordered)
+                .secondaryButtonStyle()
             }
-            .padding(.top)
         }
+        .padding()
         .alert("Sign In Error", isPresented: $showAlert) {
             Button("OK", role: .cancel) { }
         } message: {

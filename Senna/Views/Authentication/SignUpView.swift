@@ -18,29 +18,85 @@ struct SignUpView: View {
     }
     
     var body: some View {
-        VStack(spacing: Theme.spacing) {
-            TextField("Username", text: $username)
-                .textContentType(.username)
-                .autocapitalization(.none)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 300)
+        VStack(spacing: Theme.spacing * 1.5) {
+            // Logo and Welcome Text
+            VStack(spacing: 8) {
+                Image("AppIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
+                    .cornerRadius(20)
+                
+                Text("Create Account")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("Join the fitness community")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.bottom, Theme.spacing)
             
-            TextField("Email", text: $email)
-                .textContentType(.emailAddress)
-                .autocapitalization(.none)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 300)
+            // Username field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Username")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                TextField("", text: $username)
+                    .textContentType(.username)
+                    .autocapitalization(.none)
+                    .textFieldStyle()
+            }
             
-            SecureField("Password", text: $password)
-                .textContentType(.newPassword)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 300)
+            // Email field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Email")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                TextField("", text: $email)
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                    .textFieldStyle()
+            }
             
-            SecureField("Confirm Password", text: $confirmPassword)
-                .textContentType(.newPassword)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 300)
+            // Password field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Password")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                SecureField("", text: $password)
+                    .textContentType(.newPassword)
+                    .textFieldStyle()
+                
+                if !password.isEmpty && password.count < 6 {
+                    Text("Password must be at least 6 characters")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
             
+            // Confirm Password field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Confirm Password")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                SecureField("", text: $confirmPassword)
+                    .textContentType(.newPassword)
+                    .textFieldStyle()
+                
+                if !confirmPassword.isEmpty && password != confirmPassword {
+                    Text("Passwords do not match")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
+            
+            // Sign up button
             Button {
                 Task {
                     do {
@@ -55,12 +111,21 @@ struct SignUpView: View {
                         .tint(.white)
                 } else {
                     Text("Create Account")
-                        .frame(maxWidth: 300)
+                        .fontWeight(.semibold)
                 }
             }
             .primaryButtonStyle()
             .disabled(!isFormValid || authManager.isLoading)
+            .padding(.top, Theme.spacing)
+            
+            // Terms and Privacy
+            Text("By creating an account, you agree to our Terms of Service and Privacy Policy")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
         }
+        .padding()
         .alert("Sign Up Error", isPresented: $showAlert) {
             Button("OK", role: .cancel) { }
         } message: {
