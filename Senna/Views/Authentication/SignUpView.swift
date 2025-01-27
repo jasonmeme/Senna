@@ -148,7 +148,7 @@ struct SignUpView: View {
         .alert("Sign Up Error", isPresented: $showAlert) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(authManager.error?.localizedDescription ?? "Please try again")
+            Text(authManager.errorMessage ?? "Please try again")
         }
     }
     

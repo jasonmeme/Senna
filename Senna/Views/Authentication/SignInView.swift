@@ -137,7 +137,7 @@ struct SignInView: View {
         .alert("Sign In Error", isPresented: $showAlert) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(authManager.error?.localizedDescription ?? "Please try again")
+            Text(authManager.errorMessage ?? "Please try again")
         }
     }
 } 

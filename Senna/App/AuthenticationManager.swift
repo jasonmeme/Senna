@@ -8,7 +8,8 @@ class AuthenticationManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: User?
     @Published var isLoading = false
-    @Published var error: Error?
+    @Published var errorMessage: String?
+    @Published var isProfileComplete = false
     
     init() {
         setupFirebaseAuthStateListener()
@@ -20,6 +21,11 @@ class AuthenticationManager: ObservableObject {
             print("Auth state changed - User: \(user?.uid ?? "nil")")
             self?.isAuthenticated = user != nil
             self?.currentUser = user
+            if user != nil {
+                Task {
+                    await self?.fetchUserProfile()
+                }
+            }
         }
     }
     
@@ -36,7 +42,7 @@ class AuthenticationManager: ObservableObject {
             print("Sign in completed successfully")
         } catch {
             print("Sign in error: \(error.localizedDescription)")
-            self.error = error
+            self.errorMessage = error.localizedDescription
             throw error
         }
     }
@@ -70,7 +76,7 @@ class AuthenticationManager: ObservableObject {
             print("Account creation completed successfully")
         } catch {
             print("Account creation error: \(error.localizedDescription)")
-            self.error = error
+            self.errorMessage = error.localizedDescription
             throw error
         }
     }
@@ -81,5 +87,16 @@ class AuthenticationManager: ObservableObject {
     
     func signInWithGoogle() async throws {
         // Implement Google Sign In
+    }
+    
+    func fetchUserProfile() async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        do {
+            let document = try await Firestore.firestore().collection("users").document(userId).getDocument()
+            isProfileComplete = (document.data()?["profileCompleted"] as? Bool) ?? false
+        } catch {
+            print("Error fetching user profile: \(error.localizedDescription)")
+        }
     }
 } 
