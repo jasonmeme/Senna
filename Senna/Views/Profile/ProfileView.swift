@@ -4,7 +4,9 @@ import FirebaseFirestore
 
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
+    @EnvironmentObject var authManager: AuthenticationManager
     @State private var showEditProfile = false
+    @State private var showSignOutAlert = false
     
     var body: some View {
         NavigationView {
@@ -51,12 +53,35 @@ struct ProfileView: View {
                             .fontWeight(.semibold)
                     }
                     .primaryButtonStyle()
+                    
+                    Button {
+                        showSignOutAlert = true
+                    } label: {
+                        Text("Sign Out")
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.red)
+                    .padding(.top)
                 }
                 .padding()
             }
             .navigationTitle("Profile")
-            .sheet(isPresented: $showEditProfile) {
-                ProfileSetupView()
+            .sheet(isPresented: $showEditProfile, onDismiss: {
+                Task {
+                    await viewModel.fetchProfile()
+                }
+            }) {
+                if let profile = viewModel.profile {
+                    ProfileSetupView(isEditing: true, initialProfile: profile)
+                }
+            }
+            .alert("Sign Out", isPresented: $showSignOutAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Sign Out", role: .destructive) {
+                    try? authManager.signOut()
+                }
+            } message: {
+                Text("Are you sure you want to sign out?")
             }
         }
         .task {

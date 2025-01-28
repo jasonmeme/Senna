@@ -10,6 +10,7 @@ class AuthenticationManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isProfileComplete = false
+    @Published var isInitializing = true
     
     init() {
         setupFirebaseAuthStateListener()
@@ -26,6 +27,7 @@ class AuthenticationManager: ObservableObject {
                     await self?.fetchUserProfile()
                 }
             }
+            self?.isInitializing = false
         }
     }
     

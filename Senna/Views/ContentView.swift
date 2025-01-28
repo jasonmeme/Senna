@@ -4,8 +4,10 @@ struct ContentView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     
     var body: some View {
-        Group {
-            if authManager.isAuthenticated {
+        ZStack {
+            if authManager.isInitializing {
+                LoadingView()
+            } else if authManager.isAuthenticated {
                 if authManager.isProfileComplete {
                     MainTabView()
                 } else {
@@ -14,6 +16,17 @@ struct ContentView: View {
             } else {
                 AuthenticationView()
             }
+        }
+    }
+}
+
+struct LoadingView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text("Loading...")
+                .foregroundColor(.secondary)
         }
     }
 }

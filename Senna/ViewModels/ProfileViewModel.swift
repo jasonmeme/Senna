@@ -6,14 +6,6 @@ import FirebaseFirestore
 class ProfileViewModel: ObservableObject {
     @Published var profile: UserProfile?
     
-    struct UserProfile {
-        let email: String
-        let fullName: String
-        let age: Int
-        let gender: String
-        let fitnessLevel: String
-    }
-    
     func fetchProfile() async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         

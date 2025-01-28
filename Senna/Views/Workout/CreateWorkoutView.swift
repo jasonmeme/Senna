@@ -8,8 +8,21 @@ struct CreateWorkoutView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Workout Type
-                Section("Workout Type") {
+                Section {
+                    Button {
+                        viewModel.showTemplateSelection = true
+                    } label: {
+                        if let template = viewModel.selectedTemplate {
+                            Label("Using template: \(template.name)", systemImage: "doc.fill")
+                        } else {
+                            Label("Use Template", systemImage: "doc.badge.plus")
+                        }
+                    }
+                    
+                    TextField("Title", text: $viewModel.title)
+                    TextField("Description", text: $viewModel.description, axis: .vertical)
+                        .lineLimit(3...6)
+                    
                     Picker("Type", selection: $viewModel.workoutType) {
                         ForEach(WorkoutType.allCases) { type in
                             Text(type.rawValue).tag(type)
@@ -17,51 +30,49 @@ struct CreateWorkoutView: View {
                     }
                 }
                 
-                // Description
-                Section("Description") {
-                    TextEditor(text: $viewModel.description)
-                        .frame(minHeight: 100)
+                Section("Exercises") {
+                    ForEach(viewModel.exercises) { exercise in
+                        Text(exercise.name)
+                    }
+                    
+                    Button {
+                        // Add exercise action
+                    } label: {
+                        Label("Add Exercise", systemImage: "plus.circle.fill")
+                    }
                 }
                 
-                // Photo
-                Section("Photo") {
+                Section {
                     PhotosPicker(selection: $viewModel.selectedItem,
                                matching: .images) {
-                        if let image = viewModel.selectedImage {
-                            image
+                        if let selectedImage = viewModel.selectedImage {
+                            selectedImage
                                 .resizable()
                                 .scaledToFit()
                                 .frame(maxHeight: 200)
                         } else {
                             Label("Add Photo", systemImage: "photo")
-                                .frame(maxWidth: .infinity, minHeight: 44)
-                        }
-                    }
-                    .onChange(of: viewModel.selectedItem) { _ in
-                        Task {
-                            await viewModel.loadImage()
                         }
                     }
                 }
                 
-                // Location
-                Section("Location") {
-                    Toggle("Add Current Location", isOn: $viewModel.includeLocation)
+                Section {
+                    Toggle("Include Location", isOn: $viewModel.includeLocation)
                 }
             }
-            .navigationTitle("New Workout")
+            .navigationTitle("Create Workout")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Post") {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Create") {
                         Task {
-                            await viewModel.createPost()
+                            await viewModel.createWorkout()
                             dismiss()
                         }
                     }
@@ -73,17 +84,17 @@ struct CreateWorkoutView: View {
             } message: {
                 Text(viewModel.error?.localizedDescription ?? "Unknown error occurred")
             }
+            .task {
+                if let selectedItem = viewModel.selectedItem {
+                    await viewModel.loadImage()
+                }
+            }
+            .sheet(isPresented: $viewModel.showTemplateSelection) {
+                TemplateSelectionView(onSelect: { template in
+                    viewModel.selectedTemplate = template
+                    viewModel.applyTemplate(template)
+                })
+            }
         }
     }
 }
-
-enum WorkoutType: String, CaseIterable, Identifiable {
-    case strength = "Strength Training"
-    case cardio = "Cardio"
-    case hiit = "HIIT"
-    case yoga = "Yoga"
-    case crossfit = "CrossFit"
-    case other = "Other"
-    
-    var id: String { rawValue }
-} 

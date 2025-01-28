@@ -5,13 +5,23 @@ import FirebaseAuth
 struct ProfileSetupView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     @Environment(\.dismiss) private var dismiss
-    @State private var fullName = ""
-    @State private var age = ""
-    @State private var gender = Gender.preferNotToSay
-    @State private var fitnessLevel = FitnessLevel.beginner
+    @State private var fullName: String
+    @State private var age: String
+    @State private var gender: Gender
+    @State private var fitnessLevel: FitnessLevel
     @State private var showAlert = false
     @State private var isLoading = false
     @State private var errorMessage: String?
+    
+    let isEditing: Bool
+    
+    init(isEditing: Bool = false, initialProfile: UserProfile? = nil) {
+        self.isEditing = isEditing
+        _fullName = State(initialValue: initialProfile?.fullName ?? "")
+        _age = State(initialValue: initialProfile?.age.description ?? "")
+        _gender = State(initialValue: Gender(rawValue: initialProfile?.gender ?? "") ?? .preferNotToSay)
+        _fitnessLevel = State(initialValue: FitnessLevel(rawValue: initialProfile?.fitnessLevel ?? "") ?? .beginner)
+    }
     
     enum Gender: String, CaseIterable {
         case male = "Male"
@@ -98,22 +108,25 @@ struct ProfileSetupView: View {
                                 ProgressView()
                                     .tint(.white)
                             } else {
-                                Text("Complete Setup")
+                                Text(isEditing ? "Save Changes" : "Complete Setup")
                                     .fontWeight(.semibold)
                             }
                         }
                         .primaryButtonStyle()
                         .disabled(!isFormValid || isLoading)
                         
-                        Button {
-                            Task {
-                                await skipSetup()
+                        if !isEditing {
+                            Button {
+                                Task {
+                                    await skipSetup()
+                                }
+                            } label: {
+                                Text("Complete Later")
+                                    .fontWeight(.medium)
                             }
-                        } label: {
-                            Text("Complete Later")
-                                .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                            .disabled(isLoading)
                         }
-                        .foregroundColor(.secondary)
                     }
                 }
                 .padding()
@@ -134,7 +147,12 @@ struct ProfileSetupView: View {
             return 
         }
         isLoading = true
-        defer { isLoading = false }
+        defer { 
+            isLoading = false
+            if isEditing {
+                dismiss()
+            }
+        }
         
         do {
             try await Firestore.firestore().collection("users").document(userId).updateData([

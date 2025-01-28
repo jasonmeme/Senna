@@ -13,7 +13,7 @@ struct MainTabView: View {
             
             CreateWorkoutView()
                 .tabItem {
-                    Label("Post", systemImage: "plus.circle.fill")
+                    Label("Workout", systemImage: "plus.circle.fill")
                 }
                 .tag(1)
             

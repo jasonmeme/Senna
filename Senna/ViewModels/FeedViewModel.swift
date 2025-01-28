@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseFirestore
+import FirebaseAuth
 
 @MainActor
 class FeedViewModel: ObservableObject {
@@ -9,7 +10,7 @@ class FeedViewModel: ObservableObject {
     
     private let db = Firestore.firestore()
     
-    func fetchPosts() async {
+    func loadPosts() async {
         isLoading = true
         defer { isLoading = false }
         
@@ -19,37 +20,47 @@ class FeedViewModel: ObservableObject {
                 .limit(to: 20)
                 .getDocuments()
             
-            posts = snapshot.documents.compactMap { document -> WorkoutPost? in
-                let data = document.data()
-                
-                // Safely unwrap all required fields
-                guard let userId = data["userId"] as? String,
-                      let username = data["username"] as? String,
-                      let timestamp = data["timestamp"] as? Timestamp,
-                      let workoutType = data["workoutType"] as? String,
-                      let description = data["description"] as? String else {
-                    return nil
-                }
-                
-                // Use default values for optional fields
-                let likes = (data["likes"] as? Int) ?? 0
-                let comments = (data["comments"] as? Int) ?? 0
-                let imageURL = data["imageURL"] as? String
-                
-                return WorkoutPost(
-                    id: document.documentID,
-                    userId: userId,
-                    username: username,
-                    timestamp: timestamp.dateValue(),
-                    workoutType: workoutType,
-                    description: description,
-                    imageURL: imageURL,
-                    likes: likes,
-                    comments: comments
-                )
+            posts = snapshot.documents.compactMap { doc in
+                try? doc.data(as: WorkoutPost.self)
             }
         } catch {
             self.error = error
         }
+    }
+    
+    func createPost(from workout: Workout) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let post = WorkoutPost(
+            id: UUID().uuidString,
+            userId: userId,
+            username: "User", // You might want to fetch this from UserProfile
+            workoutType: .strength, // Assuming strength workout for now
+            title: workout.title,
+            description: workout.description,
+            duration: workout.duration,
+            timestamp: Date(),
+            imageURL: workout.imageURLs.first,
+            likes: 0,
+            comments: 0,
+            exercises: workout.exercises.map { exercise in
+                WorkoutPost.CompletedExercise(
+                    name: exercise.name,
+                    sets: exercise.sets.map { set in
+                        WorkoutPost.CompletedExercise.ExerciseSet(
+                            weight: set.weight,
+                            reps: set.reps,
+                            isWarmup: set.isWarmup,
+                            rpe: set.rpe
+                        )
+                    }
+                )
+            },
+            distance: nil,
+            pace: nil,
+            elevation: nil
+        )
+        
+        try await db.collection("posts").document(post.id).setData(from: post)
     }
 } 
