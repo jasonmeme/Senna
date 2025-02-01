@@ -31,69 +31,63 @@ struct ExerciseCard: View {
             
             Divider()
             
-            // Exercise details
-            HStack(spacing: Theme.spacing * 2) {
-                // Sets and reps
-                VStack(alignment: .leading) {
-                    Label {
-                        Text("\(exercise.sets) sets")
-                    } icon: {
-                        Image(systemName: "number.circle.fill")
+            // Sets
+            VStack(spacing: Theme.spacing/2) {
+                ForEach(0..<exercise.sets, id: \.self) { index in
+                    HStack {
+                        Text("Set \(index + 1)")
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                        
+                        Text("lbs") // This will be dynamic once we add weight tracking
                             .foregroundStyle(Theme.accentColor)
-                    }
-                    
-                    Label {
+                        
+                        Text("×")
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 4)
+                        
                         Text("\(exercise.reps) reps")
-                    } icon: {
-                        Image(systemName: "repeat.circle.fill")
-                            .foregroundStyle(Theme.accentColor)
                     }
+                    .font(.subheadline)
+                    
+                    if index < exercise.sets - 1 {
+                        Divider()
+                            .padding(.leading, Theme.spacing)
+                    }
+                }
+            }
+            .padding(.vertical, Theme.spacing/2)
+            
+            // Footer info
+            HStack {
+                Label {
+                    Text("\(exercise.restSeconds)s rest")
+                } icon: {
+                    Image(systemName: "timer")
                 }
                 
                 Spacer()
                 
-                // Rest time and equipment
-                VStack(alignment: .trailing) {
-                    Label {
-                        Text("\(exercise.restSeconds)s rest")
-                    } icon: {
-                        Image(systemName: "timer")
-                            .foregroundStyle(Theme.accentColor)
-                    }
-                    
-                    Label {
-                        Text(exercise.equipment)
-                            .lineLimit(1)
-                    } icon: {
-                        Image(systemName: "dumbbell.fill")
-                            .foregroundStyle(Theme.accentColor)
-                    }
+                Label {
+                    Text(exercise.equipment)
+                } icon: {
+                    Image(systemName: "dumbbell.fill")
                 }
             }
-            .font(.subheadline)
+            .font(.caption)
+            .foregroundStyle(.secondary)
             
             // Notes if any
             if let notes = exercise.notes {
+                Divider()
                 HStack {
                     Image(systemName: "note.text")
-                        .foregroundStyle(Theme.accentColor)
                     Text(notes)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                     Spacer()
                 }
-            }
-            
-            // Muscles worked
-            if !exercise.muscles.isEmpty {
-                HStack {
-                    Image(systemName: "figure.strengthtraining.traditional")
-                        .foregroundStyle(Theme.accentColor)
-                    Text(exercise.muscles.joined(separator: ", "))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
         .padding()

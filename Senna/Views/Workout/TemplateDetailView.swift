@@ -4,6 +4,9 @@ struct TemplateDetailView: View {
     let template: WorkoutTemplate
     @State private var exercises: [ViewTemplateExercise]
     @State private var showAddExercise = false
+    @State private var templateName: String
+    @State private var templateDescription: String
+    @State private var isEditing = false
     
     init(template: WorkoutTemplate) {
         self.template = template
@@ -11,6 +14,8 @@ struct TemplateDetailView: View {
         _exercises = State(initialValue: template.exercises.map { exercise in
             ViewTemplateExercise(exercise: exercise)
         })
+        _templateName = State(initialValue: template.name)
+        _templateDescription = State(initialValue: template.description)
     }
     
     var body: some View {
@@ -18,13 +23,23 @@ struct TemplateDetailView: View {
             VStack(spacing: Theme.spacing) {
                 // Template Info
                 VStack(alignment: .leading, spacing: Theme.spacing/2) {
-                    Text(template.name)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Text(template.description)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    if isEditing {
+                        TextField("Template Name", text: $templateName)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        TextField("Description", text: $templateDescription)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(templateName)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text(templateDescription)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
@@ -62,7 +77,11 @@ struct TemplateDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Save", action: saveTemplate)
+                Button(isEditing ? "Done" : "Edit") {
+                    withAnimation {
+                        isEditing.toggle()
+                    }
+                }
             }
         }
         .sheet(isPresented: $showAddExercise) {
@@ -76,6 +95,6 @@ struct TemplateDetailView: View {
     private func saveTemplate() {
         // Convert ViewTemplateExercise back to TemplateExercise when saving
         let templateExercises = exercises.map { $0.exercise }
-        // Save template changes using templateExercises
+        // Here you would save the updated template name and description as well
     }
 } 
