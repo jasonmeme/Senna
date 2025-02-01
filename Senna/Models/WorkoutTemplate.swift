@@ -15,12 +15,24 @@ struct WorkoutTemplate: Identifiable, Codable {
     let rating: Double
     let createdAt: Date
     let updatedAt: Date
-    
-    struct TemplateExercise: Codable {
-        let name: String
-        let sets: Int
-        let reps: Int
-        let restSeconds: Int
-        let notes: String?
+}
+
+extension WorkoutTemplate {
+    static func createNew(creatorId: String, creatorName: String) -> WorkoutTemplate {
+        WorkoutTemplate(
+            id: UUID().uuidString,
+            name: "New Template",
+            creatorId: creatorId,
+            creatorName: creatorName,
+            description: "",
+            exercises: [],
+            imageURL: nil,
+            isPublic: false,
+            saveCount: 0,
+            usageCount: 0,
+            rating: 0,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
     }
 } 

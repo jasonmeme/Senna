@@ -3,98 +3,113 @@ import PhotosUI
 
 struct CreateWorkoutView: View {
     @StateObject private var viewModel = CreateWorkoutViewModel()
-    @Environment(\.dismiss) private var dismiss
+    @State private var showActiveWorkout = false
+    @State private var selectedTemplate: WorkoutTemplate?
+    @State private var showNewTemplate = false
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Button {
-                        viewModel.showTemplateSelection = true
-                    } label: {
-                        if let template = viewModel.selectedTemplate {
-                            Label("Using template: \(template.name)", systemImage: "doc.fill")
+            ScrollView {
+                VStack(spacing: Theme.spacing * 3) {
+                    // Quick Start Section
+                    VStack(spacing: Theme.spacing) {
+                        Text("Quick Start")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Button {
+                            selectedTemplate = nil
+                            showActiveWorkout = true
+                        } label: {
+                            HStack(spacing: Theme.spacing) {
+                                Image(systemName: "play.circle.fill")
+                                    .font(.title2)
+                                VStack(alignment: .leading) {
+                                    Text("Start Empty Workout")
+                                        .font(.headline)
+                                    Text("Create a workout from scratch")
+                                        .font(.subheadline)
+                                        .foregroundColor(.white.opacity(0.8))
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Theme.accentColor)
+                            .foregroundColor(.white)
+                            .cornerRadius(Theme.cornerRadius)
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Recent Templates Section
+                    if !viewModel.recentTemplates.isEmpty {
+                        VStack(alignment: .leading, spacing: Theme.spacing) {
+                            Text("Recent")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: Theme.spacing) {
+                                    ForEach(viewModel.recentTemplates.prefix(3)) { template in
+                                        RecentTemplateCard(template: template) {
+                                            selectedTemplate = template
+                                            showActiveWorkout = true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // All Templates Section
+                    VStack(alignment: .leading, spacing: Theme.spacing) {
+                        HStack {
+                            Text("My Templates")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            NavigationLink {
+                                TemplateDetailView(template: viewModel.createNewTemplate())
+                            } label: {
+                                Label("New Template", systemImage: "plus.circle.fill")
+                                    .foregroundColor(Theme.accentColor)
+                            }
+                        }
+                        
+                        if viewModel.templates.isEmpty {
+                            EmptyTemplatesView()
                         } else {
-                            Label("Use Template", systemImage: "doc.badge.plus")
+                            LazyVGrid(columns: [
+                                GridItem(.flexible(), spacing: Theme.spacing),
+                                GridItem(.flexible(), spacing: Theme.spacing)
+                            ], spacing: Theme.spacing) {
+                                ForEach(viewModel.templates) { template in
+                                    TemplateCard(template: template) {
+                                        selectedTemplate = template
+                                        showActiveWorkout = true
+                                    }
+                                }
+                            }
                         }
                     }
-                    
-                    TextField("Title", text: $viewModel.title)
-                    TextField("Description", text: $viewModel.description, axis: .vertical)
-                        .lineLimit(3...6)
-                    
-                    Picker("Type", selection: $viewModel.workoutType) {
-                        ForEach(WorkoutType.allCases) { type in
-                            Text(type.rawValue).tag(type)
-                        }
-                    }
+                    .padding(.horizontal)
                 }
-                
-                Section("Exercises") {
-                    ForEach(viewModel.exercises) { exercise in
-                        Text(exercise.name)
-                    }
-                    
-                    Button {
-                        // Add exercise action
-                    } label: {
-                        Label("Add Exercise", systemImage: "plus.circle.fill")
-                    }
-                }
-                
-                Section {
-                    PhotosPicker(selection: $viewModel.selectedItem,
-                               matching: .images) {
-                        if let selectedImage = viewModel.selectedImage {
-                            selectedImage
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 200)
-                        } else {
-                            Label("Add Photo", systemImage: "photo")
-                        }
-                    }
-                }
-                
-                Section {
-                    Toggle("Include Location", isOn: $viewModel.includeLocation)
-                }
+                .padding(.vertical)
             }
-            .navigationTitle("Create Workout")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+            .navigationTitle("Workout")
+            .fullScreenCover(isPresented: $showActiveWorkout) {
+                VStack {
+                    Text("Fake Active Workout View")
+                    Text("Template Name: Test")
                 }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Create") {
-                        Task {
-                            await viewModel.createWorkout()
-                            dismiss()
-                        }
-                    }
-                    .disabled(!viewModel.isValid)
-                }
-            }
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(viewModel.error?.localizedDescription ?? "Unknown error occurred")
-            }
-            .task {
-                if let selectedItem = viewModel.selectedItem {
-                    await viewModel.loadImage()
-                }
-            }
-            .sheet(isPresented: $viewModel.showTemplateSelection) {
-                TemplateSelectionView(onSelect: { template in
-                    viewModel.selectedTemplate = template
-                    viewModel.applyTemplate(template)
-                })
             }
         }
     }
 }
+
