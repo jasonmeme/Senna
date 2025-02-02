@@ -6,11 +6,9 @@ struct TemplateDetailView: View {
     @State private var showAddExercise = false
     @State private var templateName: String
     @State private var templateDescription: String
-    @State private var isEditing = false
     
     init(template: WorkoutTemplate) {
         self.template = template
-        // Convert template exercises to ViewTemplateExercise format
         _exercises = State(initialValue: template.exercises.map { exercise in
             ViewTemplateExercise(exercise: exercise)
         })
@@ -23,23 +21,13 @@ struct TemplateDetailView: View {
             VStack(spacing: Theme.spacing) {
                 // Template Info
                 VStack(alignment: .leading, spacing: Theme.spacing/2) {
-                    if isEditing {
-                        TextField("Template Name", text: $templateName)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        TextField("Description", text: $templateDescription)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text(templateName)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        Text(templateDescription)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    TextField("Template Name", text: $templateName)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    TextField("Add a description (optional)", text: $templateDescription)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
@@ -77,11 +65,7 @@ struct TemplateDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button(isEditing ? "Done" : "Edit") {
-                    withAnimation {
-                        isEditing.toggle()
-                    }
-                }
+                Button("Save", action: saveTemplate)
             }
         }
         .sheet(isPresented: $showAddExercise) {

@@ -1,117 +1,53 @@
 import SwiftUI
 
 struct ExerciseCard: View {
-    let exercise: ViewTemplateExercise
+    @StateObject private var viewModel: ExerciseCardViewModel
     let onDelete: () -> Void
+    
+    init(exercise: ViewTemplateExercise, onDelete: @escaping () -> Void) {
+        _viewModel = StateObject(wrappedValue: ExerciseCardViewModel(exercise: exercise))
+        self.onDelete = onDelete
+    }
     
     var body: some View {
         VStack(spacing: Theme.spacing) {
-            // Header with name and menu
-            HStack {
-                HStack(spacing: Theme.spacing/2) {
-                    Image(systemName: exercise.category.icon)
-                        .foregroundStyle(Theme.accentColor)
-                    Text(exercise.name)
-                        .font(.headline)
-                        .lineLimit(1)
-                }
-                
-                Spacer()
-                
-                Menu {
-                    Button("Edit", action: {
-                        // TODO: Implement edit functionality
-                    })
-                    Button("Delete", role: .destructive, action: onDelete)
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundStyle(.secondary)
-                }
-            }
+            ExerciseHeader(exercise: viewModel.exercise, onDelete: onDelete)
             
             Divider()
             
             // Sets
             VStack(spacing: Theme.spacing/2) {
-                ForEach(0..<exercise.sets, id: \.self) { index in
-                    HStack {
-                        Text("Set \(index + 1)")
-                            .foregroundStyle(.secondary)
+                ForEach(Array(viewModel.sets.enumerated()), id: \.element.id) { index, set in
+                    VStack(spacing: 4) {
+                        SetRow(
+                            index: index,
+                            weight: Binding(
+                                get: { String(set.weight ?? 0) },
+                                set: { viewModel.updateWeight(at: index, text: $0) }
+                            ),
+                            reps: Binding(
+                                get: { set.reps },
+                                set: { viewModel.updateReps(at: index, reps: $0) }
+                            )
+                        )
                         
-                        Spacer()
-                        
-                        Text("lbs") // This will be dynamic once we add weight tracking
-                            .foregroundStyle(Theme.accentColor)
-                        
-                        Text("×")
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 4)
-                        
-                        Text("\(exercise.reps) reps")
-                    }
-                    .font(.subheadline)
-                    
-                    if index < exercise.sets - 1 {
-                        Divider()
-                            .padding(.leading, Theme.spacing)
+                        if index < viewModel.sets.count - 1 {
+                            Divider()
+                                .padding(.leading, Theme.spacing)
+                        }
                     }
                 }
             }
             .padding(.vertical, Theme.spacing/2)
             
-            // Footer info
-            HStack {
-                Label {
-                    Text("\(exercise.restSeconds)s rest")
-                } icon: {
-                    Image(systemName: "timer")
-                }
-                
-                Spacer()
-                
-                Label {
-                    Text(exercise.equipment)
-                } icon: {
-                    Image(systemName: "dumbbell.fill")
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            AddSetButton(action: viewModel.addSet)
             
-            // Notes if any
-            if let notes = exercise.notes {
-                Divider()
-                HStack {
-                    Image(systemName: "note.text")
-                    Text(notes)
-                    Spacer()
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+            Divider()
+            
+            ExerciseFooter(exercise: viewModel.exercise)
         }
         .padding()
         .background(Theme.secondaryBackgroundColor)
         .cornerRadius(Theme.cornerRadius)
     }
 }
-
-#Preview {
-    ExerciseCard(
-        exercise: ViewTemplateExercise(
-            exercise: TemplateExercise(
-                name: "Bench Press",
-                sets: 3,
-                reps: 10,
-                restSeconds: 60,
-                notes: "Keep elbows tucked",
-                category: .push,
-                muscles: ["Chest", "Triceps", "Shoulders"],
-                equipment: "Barbell"
-            )
-        )
-    ) {
-        print("Delete tapped")
-    }
-    .padding()
-} 

@@ -2,8 +2,7 @@ import Foundation
 
 struct TemplateExercise: Codable {
     let name: String
-    let sets: Int
-    let reps: Int
+    var sets: [SetData]
     let restSeconds: Int
     let notes: String?
     let category: ExerciseCategory
@@ -12,17 +11,17 @@ struct TemplateExercise: Codable {
     
     init(
         name: String,
-        sets: Int = 3,
-        reps: Int = 10,
-        restSeconds: Int = 60,
+        sets: [SetData] = [],
+        restSeconds: Int = ExerciseConstants.defaultRestSeconds,
         notes: String? = nil,
         category: ExerciseCategory,
         muscles: [String],
         equipment: String
     ) {
         self.name = name
-        self.sets = sets
-        self.reps = reps
+        self.sets = sets.isEmpty ? 
+            Array(repeating: SetData(reps: ExerciseConstants.defaultReps), count: ExerciseConstants.defaultSets) : 
+            sets
         self.restSeconds = restSeconds
         self.notes = notes
         self.category = category
@@ -31,15 +30,16 @@ struct TemplateExercise: Codable {
     }
     
     // Convenience initializer to create from Exercise
-    init(from exercise: Exercise, sets: Int = 3, reps: Int = 10, restSeconds: Int = 60) {
+    init(from exercise: Exercise) {
         self.init(
             name: exercise.name,
-            sets: sets,
-            reps: reps,
-            restSeconds: restSeconds,
             category: exercise.category,
             muscles: exercise.muscles,
             equipment: exercise.equipment.first ?? "bodyweight"
         )
     }
+}
+
+extension TemplateExercise: ExerciseData {
+    // Already conforms by having all required properties
 } 
