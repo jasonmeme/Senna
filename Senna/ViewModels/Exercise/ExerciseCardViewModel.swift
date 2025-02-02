@@ -12,7 +12,8 @@ class ExerciseCardViewModel: ObservableObject {
     
     func addSet() {
         let lastReps = sets.last?.reps ?? ExerciseConstants.defaultReps
-        let newSet = SetData(reps: lastReps)
+        let lastWeight = sets.last?.weight ?? 0.0  // Use default weight if no previous set
+        let newSet = SetData(weight: lastWeight, reps: lastReps)
         sets.append(newSet)
     }
     
@@ -23,7 +24,9 @@ class ExerciseCardViewModel: ObservableObject {
     
     func updateWeight(at index: Int, text: String) {
         guard sets.indices.contains(index) else { return }
-        sets[index].weight = Double(text)
+        if let weight = Double(text) {
+            sets[index].weight = weight
+        }
     }
     
     func updateReps(at index: Int, reps: Int) {

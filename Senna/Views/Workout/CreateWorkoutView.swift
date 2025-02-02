@@ -82,6 +82,11 @@ struct CreateWorkoutView: View {
                 .padding(.vertical)
             }
             .navigationTitle("Workout")
+            .sheet(item: $selectedTemplate) { template in
+                NavigationStack {
+                    WorkoutTemplatePreviewView(template: template)
+                }
+            }
             .task {
                 await viewModel.loadTemplates()
             }

@@ -37,16 +37,22 @@ class CreateWorkoutViewModel: ObservableObject {
                 .order(by: "updatedAt", descending: true)
                 .getDocuments()
             
-            
+            print("Raw documents: \(snapshot.documents.map { $0.data() })")
             templates = snapshot.documents.compactMap { doc in
                 do {
                     let template = try doc.data(as: WorkoutTemplate.self)
+                    print("Successfully decoded template: \(template.name)")
                     return template
                 } catch {
+                    print("Failed to decode template: \(error)")
                     return nil
                 }
             }
-            
+
+            print("Loaded templates: \(templates.count)")
+            templates.forEach { template in
+                print("Template: \(template.name), Exercises: \(template.exercises.count)")
+            }
         } catch {
             self.error = error
             showError = true
@@ -57,6 +63,7 @@ class CreateWorkoutViewModel: ObservableObject {
         guard let userId = Auth.auth().currentUser?.uid else {
             return WorkoutTemplate.createNew(creatorId: "unknown", creatorName: "Unknown")
         }
+        // TODO: Get user name
         return WorkoutTemplate.createNew(creatorId: userId, creatorName: "User")
     }
 } 
