@@ -30,4 +30,9 @@ class ExerciseCardViewModel: ObservableObject {
         guard sets.indices.contains(index) else { return }
         sets[index].reps = reps
     }
+    
+    func updateCompletion(at index: Int, isCompleted: Bool) {
+        guard sets.indices.contains(index) else { return }
+        sets[index].isCompleted = isCompleted
+    }
 } 
