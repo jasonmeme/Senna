@@ -10,7 +10,7 @@ struct ExerciseCard: View {
     }
     
     var body: some View {
-        VStack(spacing: Theme.spacing) {
+        VStack(spacing: Theme.spacing/2) {
             // Exercise Title
             HStack {
                 Image(systemName: viewModel.exercise.category.icon)
