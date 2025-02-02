@@ -5,7 +5,6 @@ struct CreateWorkoutView: View {
     @StateObject private var viewModel = CreateWorkoutViewModel()
     @State private var showActiveWorkout = false
     @State private var selectedTemplate: WorkoutTemplate?
-    @State private var showNewTemplate = false
     
     var body: some View {
         NavigationStack {
@@ -44,27 +43,7 @@ struct CreateWorkoutView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Recent Templates Section
-                    if !viewModel.recentTemplates.isEmpty {
-                        VStack(alignment: .leading, spacing: Theme.spacing) {
-                            Text("Recent")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: Theme.spacing) {
-                                    ForEach(viewModel.recentTemplates.prefix(3)) { template in
-                                        RecentTemplateCard(template: template) {
-                                            selectedTemplate = template
-                                            showActiveWorkout = true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                    
+
                     // All Templates Section
                     VStack(alignment: .leading, spacing: Theme.spacing) {
                         HStack {
@@ -103,11 +82,11 @@ struct CreateWorkoutView: View {
                 .padding(.vertical)
             }
             .navigationTitle("Workout")
-            .fullScreenCover(isPresented: $showActiveWorkout) {
-                VStack {
-                    Text("Fake Active Workout View")
-                    Text("Template Name: Test")
-                }
+            .task {
+                await viewModel.loadTemplates()
+            }
+            .refreshable {
+                await viewModel.loadTemplates()
             }
         }
     }

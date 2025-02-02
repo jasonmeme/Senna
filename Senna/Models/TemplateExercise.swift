@@ -42,4 +42,18 @@ struct TemplateExercise: Codable {
 
 extension TemplateExercise: ExerciseData {
     // Already conforms by having all required properties
+}
+
+extension TemplateExercise {
+    func asDictionary() -> [String: Any] {
+        [
+            "name": name,
+            "sets": sets.map { $0.asDictionary() },
+            "restSeconds": restSeconds,
+            "notes": notes as Any,
+            "category": category.rawValue,
+            "muscles": muscles,
+            "equipment": equipment
+        ]
+    }
 } 

@@ -1,4 +1,6 @@
 import Foundation
+import FirebaseFirestore
+import FirebaseAuth
 
 @MainActor
 class TemplateDetailViewModel: ObservableObject {
@@ -7,6 +9,7 @@ class TemplateDetailViewModel: ObservableObject {
     @Published var exercises: [ViewTemplateExercise]
     
     private let template: WorkoutTemplate
+    private let db = Firestore.firestore()
     
     init(template: WorkoutTemplate) {
         self.template = template
@@ -31,6 +34,33 @@ class TemplateDetailViewModel: ObservableObject {
     }
     
     func saveTemplate() async throws {
-        // Implement save functionality
+        print("Saving template with name: \(templateName)")
+        print("Description: \(templateDescription)")
+        print("Number of exercises: \(exercises.count)")
+        
+        guard let userId = Auth.auth().currentUser?.uid else {
+            throw NSError(domain: "TemplateError", code: 1, userInfo: [NSLocalizedDescriptionKey: "User not logged in"])
+        }
+        
+        let templateExercises = exercises.map { $0.exercise as! TemplateExercise }
+        
+        // Create document reference first to get the ID
+        let docRef = template.id.isEmpty ? 
+            db.collection("workoutTemplates").document() :
+            db.collection("workoutTemplates").document(template.id)
+        
+        let updatedTemplate = WorkoutTemplate(
+            id: docRef.documentID,
+            name: templateName,
+            description: templateDescription,
+            exercises: templateExercises,
+            creatorId: userId,
+            creatorName: template.creatorName,
+            createdAt: template.createdAt,
+            updatedAt: Date()
+        )
+        
+        print("Saving template: \(updatedTemplate)")
+        try await docRef.setData(updatedTemplate.asDictionary())
     }
 } 

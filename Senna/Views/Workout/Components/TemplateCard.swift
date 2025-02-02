@@ -7,30 +7,29 @@ struct TemplateCard: View {
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: Theme.spacing) {
-                HStack {
-                    Text(template.name)
-                        .font(.headline)
-                        .lineLimit(1)
-                    
-                    Spacer()
-                    
-                    Menu {
-                        NavigationLink("Edit") {
-                            TemplateDetailView(template: template)
-                        }
-                        Button("Delete", role: .destructive, action: {})
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                // Template Name
+                Text(template.name)
+                    .font(.headline)
+                    .lineLimit(1)
                 
-                // Preview first 2 exercises
-                ForEach(template.exercises.prefix(2), id: \.name) { exercise in
-                    Text(exercise.name)
+                // Description if exists
+                if !template.description.isEmpty {
+                    Text(template.description)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                }
+                
+                // Exercise Preview
+                ForEach(template.exercises.prefix(2), id: \.name) { exercise in
+                    HStack(spacing: Theme.spacing/2) {
+                        Image(systemName: exercise.category.icon)
+                            .foregroundStyle(Theme.accentColor)
+                        Text(exercise.name)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .lineLimit(1)
                 }
                 
                 if template.exercises.count > 2 {
@@ -39,16 +38,15 @@ struct TemplateCard: View {
                         .foregroundStyle(.secondary)
                 }
                 
+                // Last Updated
                 Text(template.updatedAt.formatted(date: .abbreviated, time: .omitted))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .padding()
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                    .fill(Theme.secondaryBackgroundColor)
-                    .shadow(color: .black.opacity(0.1), radius: 5)
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.secondaryBackgroundColor)
+            .cornerRadius(Theme.cornerRadius)
         }
         .buttonStyle(.plain)
     }

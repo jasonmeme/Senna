@@ -1,7 +1,7 @@
 import Foundation
 
 struct SetData: Identifiable, Codable {
-    let id: String
+    var id: String?
     var weight: Double?
     var reps: Int
     var isCompleted: Bool
@@ -16,5 +16,15 @@ struct SetData: Identifiable, Codable {
         self.weight = weight
         self.reps = reps
         self.isCompleted = isCompleted
+    }
+}
+
+extension SetData {
+    func asDictionary() -> [String: Any] {
+        [
+            "weight": weight as Any,
+            "reps": reps,
+            "isCompleted": isCompleted
+        ]
     }
 } 

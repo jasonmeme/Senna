@@ -9,23 +9,12 @@ class CreateWorkoutViewModel: ObservableObject {
     @Published var title = ""
     @Published var description = ""
     @Published var exercises: [Exercise] = []
-    @Published var selectedItem: PhotosPickerItem?
-    @Published var selectedImage: Image?
-    @Published var includeLocation = false
     @Published var isLoading = false
     @Published var error: Error?
     @Published var showError = false
-    @Published var showTemplateSelection = false
-    @Published var selectedTemplate: WorkoutTemplate?
     @Published var templates: [WorkoutTemplate] = []
-    @Published var recentTemplates: [WorkoutTemplate] = []
     
-    private let storage = Storage.storage()
     private let db = Firestore.firestore()
-    
-    var isValid: Bool {
-        !title.isEmpty && !description.isEmpty
-    }
     
     init() {
         Task {
@@ -33,28 +22,14 @@ class CreateWorkoutViewModel: ObservableObject {
         }
     }
     
-    
-    func applyTemplate(_ template: WorkoutTemplate) {
-        title = template.name
-        description = template.description
-        exercises = template.exercises.map { templateExercise in
-            Exercise(
-                id: UUID().uuidString,
-                name: templateExercise.name,
-                category: .push,
-                muscles: [],
-                equipment: [templateExercise.equipment],
-                createdAt: Date(),
-                updatedAt: Date()
-            )
-        }
-    }
-    
     func loadTemplates() async {
+        print("Loading templates...")
         isLoading = true
         defer { isLoading = false }
         
-        guard let userId = Auth.auth().currentUser?.uid else { return }
+        guard let userId = Auth.auth().currentUser?.uid else {
+            return 
+        }
         
         do {
             let snapshot = try await db.collection("workoutTemplates")
@@ -62,25 +37,26 @@ class CreateWorkoutViewModel: ObservableObject {
                 .order(by: "updatedAt", descending: true)
                 .getDocuments()
             
-            templates = snapshot.documents.compactMap { doc in
-                try? doc.data(as: WorkoutTemplate.self)
-            }
             
-            // Get recent templates (last 3 used)
-            recentTemplates = templates.prefix(3).map { $0 }
+            templates = snapshot.documents.compactMap { doc in
+                do {
+                    let template = try doc.data(as: WorkoutTemplate.self)
+                    return template
+                } catch {
+                    return nil
+                }
+            }
             
         } catch {
             self.error = error
+            showError = true
         }
     }
     
     func createNewTemplate() -> WorkoutTemplate {
         guard let userId = Auth.auth().currentUser?.uid else {
-            // Return a dummy template if no user (shouldn't happen in practice)
             return WorkoutTemplate.createNew(creatorId: "unknown", creatorName: "Unknown")
         }
-        
-        // You might want to fetch the user's name from your user profile
         return WorkoutTemplate.createNew(creatorId: userId, creatorName: "User")
     }
 } 

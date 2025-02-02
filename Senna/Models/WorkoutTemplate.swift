@@ -4,35 +4,36 @@ import FirebaseFirestore
 struct WorkoutTemplate: Identifiable, Codable {
     let id: String
     let name: String
-    let creatorId: String
-    let creatorName: String
     let description: String
     let exercises: [TemplateExercise]
-    let imageURL: String?
-    let isPublic: Bool
-    let saveCount: Int
-    let usageCount: Int
-    let rating: Double
+    let creatorId: String
+    let creatorName: String
     let createdAt: Date
     let updatedAt: Date
-}
-
-extension WorkoutTemplate {
+    
     static func createNew(creatorId: String, creatorName: String) -> WorkoutTemplate {
         WorkoutTemplate(
-            id: UUID().uuidString,
-            name: "New Template",
-            creatorId: creatorId,
-            creatorName: creatorName,
+            id: "",
+            name: "",
             description: "",
             exercises: [],
-            imageURL: nil,
-            isPublic: false,
-            saveCount: 0,
-            usageCount: 0,
-            rating: 0,
+            creatorId: creatorId,
+            creatorName: creatorName,
             createdAt: Date(),
             updatedAt: Date()
         )
+    }
+    
+    func asDictionary() -> [String: Any] {
+        [
+            "id": id,
+            "name": name,
+            "description": description,
+            "exercises": exercises.map { $0.asDictionary() },
+            "creatorId": creatorId,
+            "creatorName": creatorName,
+            "createdAt": Timestamp(date: createdAt),
+            "updatedAt": Timestamp(date: updatedAt)
+        ]
     }
 } 

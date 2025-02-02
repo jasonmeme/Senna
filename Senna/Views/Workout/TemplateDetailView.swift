@@ -2,18 +2,13 @@ import SwiftUI
 
 struct TemplateDetailView: View {
     let template: WorkoutTemplate
-    @State private var exercises: [ViewTemplateExercise]
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel: TemplateDetailViewModel
     @State private var showAddExercise = false
-    @State private var templateName: String
-    @State private var templateDescription: String
     
     init(template: WorkoutTemplate) {
         self.template = template
-        _exercises = State(initialValue: template.exercises.map { exercise in
-            ViewTemplateExercise(exercise: exercise)
-        })
-        _templateName = State(initialValue: template.name)
-        _templateDescription = State(initialValue: template.description)
+        _viewModel = StateObject(wrappedValue: TemplateDetailViewModel(template: template))
     }
     
     var body: some View {
@@ -21,11 +16,11 @@ struct TemplateDetailView: View {
             VStack(spacing: Theme.spacing) {
                 // Template Info
                 VStack(alignment: .leading, spacing: Theme.spacing/2) {
-                    TextField("Template Name", text: $templateName)
+                    TextField("Template Name", text: $viewModel.templateName)
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    TextField("Add a description (optional)", text: $templateDescription)
+                    TextField("Add a description (optional)", text: $viewModel.templateDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -36,15 +31,15 @@ struct TemplateDetailView: View {
                 
                 // Exercises List
                 LazyVStack(spacing: Theme.spacing) {
-                    ForEach(exercises) { exercise in
+                    ForEach(viewModel.exercises) { exercise in
                         ExerciseCard(exercise: exercise) {
-                            if let index = exercises.firstIndex(where: { $0.id == exercise.id }) {
-                                exercises.remove(at: index)
+                            if let index = viewModel.exercises.firstIndex(where: { $0.id == exercise.id }) {
+                                viewModel.removeExercise(at: index)
                             }
                         }
                     }
                     .onMove { from, to in
-                        exercises.move(fromOffsets: from, toOffset: to)
+                        viewModel.moveExercise(from: from, to: to)
                     }
                 }
                 
@@ -70,15 +65,19 @@ struct TemplateDetailView: View {
         }
         .sheet(isPresented: $showAddExercise) {
             ExerciseSearchView { exercise in
-                let templateExercise = TemplateExercise(from: exercise)
-                exercises.append(ViewTemplateExercise(exercise: templateExercise))
+                viewModel.addExercise(exercise)
             }
         }
     }
     
     private func saveTemplate() {
-        // Convert ViewTemplateExercise back to TemplateExercise when saving
-        let templateExercises = exercises.map { $0.exercise }
-        // Here you would save the updated template name and description as well
+        Task {
+            do {
+                try await viewModel.saveTemplate()
+                dismiss()
+            } catch {
+                print("Error saving template: \(error)")
+            }
+        }
     }
 } 
