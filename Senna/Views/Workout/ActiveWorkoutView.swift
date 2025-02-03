@@ -6,6 +6,7 @@ struct ActiveWorkoutView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showEndWorkoutConfirmation = false
     @State private var showAddExercise = false
+    @State private var showWorkoutCompletion = false
     
     init(template: WorkoutTemplate? = nil) {
         self.template = template
@@ -92,10 +93,13 @@ struct ActiveWorkoutView: View {
                 Text("Are you sure you want to end this workout? All progress will be lost.")
             }
         }
+        .fullScreenCover(isPresented: $showWorkoutCompletion) {
+            WorkoutCompletionView(workout: viewModel)
+        }
     }
     
     private func finishWorkout() {
-        // TODO: Save workout and show post-workout view
+        showWorkoutCompletion = true
     }
 }
 

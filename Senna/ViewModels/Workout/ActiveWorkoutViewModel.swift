@@ -5,8 +5,10 @@ class ActiveWorkoutViewModel: ObservableObject {
     @Published var exercises: [ActiveExercise]
     @Published var elapsedTime: TimeInterval = 0
     private var timer: Timer?
+    let template: WorkoutTemplate?
     
     init(template: WorkoutTemplate? = nil) {
+        self.template = template
         if let template = template {
             self.exercises = template.exercises.map { ActiveExercise(from: $0) }
         } else {
