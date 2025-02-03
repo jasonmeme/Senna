@@ -13,19 +13,33 @@ struct WorkoutCompletionView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Theme.spacing * 2) {
-                    // Header Stats Section
                     statsSection
                     
                     // Main Content
-                    VStack(spacing: Theme.spacing * 2) {
+                    VStack(spacing: Theme.spacing) {
                         titleSection
+                        
+                        Divider()
+                        
                         workoutDetailsSection
+                        
+                        Divider()
+                        
                         photoSection
+                        
+                        Divider()
+                        
                         moodSection
+                        
+                        Divider()
+                        
                         locationSection
+                        
+                        Divider()
+                        
                         taggingSection
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 24)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -57,7 +71,8 @@ struct WorkoutCompletionView: View {
                         .padding()
                         .background(Theme.accentColor)
                         .cornerRadius(Theme.cornerRadius)
-                        .padding()
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
                 }
             }
             .background(Theme.backgroundColor)
@@ -77,7 +92,7 @@ struct WorkoutCompletionView: View {
             .background(Theme.secondaryBackgroundColor)
             .cornerRadius(Theme.cornerRadius)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 24)
     }
     
     private var titleSection: some View {
@@ -86,7 +101,7 @@ struct WorkoutCompletionView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
             TextField("Enter workout title", text: $viewModel.workoutTitle)
-                .font(.title3)
+                .font(.body)
                 .textFieldStyle(CustomRoundedBorderStyle())
         }
     }
@@ -99,12 +114,12 @@ struct WorkoutCompletionView: View {
             TextEditor(text: $viewModel.notes)
                 .font(.body)
                 .frame(height: 120)
-                .padding(12)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.gray.opacity(0.5), lineWidth: 1.5)
                 )
-                .padding(.vertical, 4)
         }
     }
     
@@ -144,7 +159,6 @@ struct WorkoutCompletionView: View {
                     }
                 }
             }
-            .padding(.vertical, 4)
         }
     }
     
@@ -167,8 +181,6 @@ struct WorkoutCompletionView: View {
             TextField("@mention your friends", text: $viewModel.friendTags)
                 .font(.body)
                 .textFieldStyle(CustomRoundedBorderStyle())
-                .frame(height: 56)
-                .padding(.vertical, 4)
         }
     }
 }
@@ -217,11 +229,11 @@ struct PhotoPickerButton: View {
 struct CustomRoundedBorderStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
-            .padding(.horizontal, 16)  // More internal padding between text and border
-            .padding(.vertical, 12)    // More internal padding between text and border
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray.opacity(0.25), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                    .stroke(Color.gray.opacity(0.5), lineWidth: 1.5)
                     .background(Color.white)
             )
     }
