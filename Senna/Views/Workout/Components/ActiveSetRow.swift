@@ -5,36 +5,49 @@ struct ActiveSetRow: View {
     @Binding var set: SetData
     
     var body: some View {
-        HStack(spacing: Theme.spacing) {
-            Text("Set \(index + 1)")
+        HStack(spacing: 12) {
+            // Set number
+            Text("\(index + 1)")
                 .foregroundStyle(.secondary)
+                .frame(width: 40, alignment: .leading)
             
-            HStack {
-                TextField("Weight", value: $set.weight, format: .number)
-                    .keyboardType(.decimalPad)
-                    .frame(width: 60)
-                    .multilineTextAlignment(.trailing)
-                Text("kg")
-                    .foregroundStyle(.secondary)
-                
-                Stepper("", value: $set.weight, in: 0...1000, step: 2.5)
-                    .labelsHidden()
+            // Weight TextField
+            TextField("0", value: $set.weight, format: .number)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.center)
+                .frame(width: 70)
+                .textFieldStyle(.roundedBorder)
+            
+            // Reps TextField
+            TextField("0", value: $set.reps, format: .number)
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.center)
+                .frame(width: 70)
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: set.reps) { newValue in
+                    set.reps = min(max(newValue, 1), 100)
+                }
+            
+            Spacer()
+            
+            // Completion Checkbox
+            Button {
+                set.isCompleted.toggle()
+            } label: {
+                Image(systemName: set.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(set.isCompleted ? Theme.accentColor : .secondary)
             }
-            
-            HStack {
-                TextField("Reps", value: $set.reps, format: .number)
-                    .keyboardType(.numberPad)
-                    .frame(width: 40)
-                    .multilineTextAlignment(.trailing)
-                Text("reps")
-                    .foregroundStyle(.secondary)
-                
-                Stepper("", value: $set.reps, in: 0...100, step: 1)
-                    .labelsHidden()
+            .frame(width: 50)
+        }
+        .font(.subheadline)
+        .padding(.horizontal)
+        .contentShape(Rectangle())
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                // TODO: Implement delete functionality
+            } label: {
+                Label("Delete", systemImage: "trash")
             }
-            
-            Toggle("", isOn: $set.isCompleted)
-                .labelsHidden()
         }
     }
 } 

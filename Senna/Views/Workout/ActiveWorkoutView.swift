@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct ActiveWorkoutView: View {
-    let template: WorkoutTemplate?  // Optional since it can be started from empty
+    let template: WorkoutTemplate?
     @StateObject private var viewModel: ActiveWorkoutViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showEndWorkoutConfirmation = false
+    @State private var showAddExercise = false
     
     init(template: WorkoutTemplate? = nil) {
         self.template = template
@@ -15,19 +16,40 @@ struct ActiveWorkoutView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Theme.spacing) {
-                    WorkoutTimerView(elapsedTime: viewModel.elapsedTime)
-                        .padding(.vertical)
+                    // Workout Info Section
+                    VStack(spacing: Theme.spacing/2) {
+                        WorkoutTimerView(elapsedTime: viewModel.elapsedTime)
+                            .padding(.vertical, Theme.spacing/2)
+                        
+                        Divider()
+                            .padding(.horizontal)
+                        
+                        // Stats Row (you can add more workout stats here)
+                        HStack {
+                            WorkoutStatView(title: "Exercises", value: "\(viewModel.exercises.count)")
+                            Divider().frame(height: 20)
+                            WorkoutStatView(title: "Total Sets", value: "\(viewModel.exercises.reduce(0) { $0 + $1.sets.count })")
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, Theme.spacing/2)
+                    }
+                    .background(Theme.secondaryBackgroundColor)
+                    .cornerRadius(Theme.cornerRadius)
                     
+                    // Exercises List
                     LazyVStack(spacing: Theme.spacing) {
                         ForEach($viewModel.exercises) { $exercise in
                             ActiveExerciseCard(exercise: $exercise)
                         }
                     }
                     
+                    // Add Exercise Button
                     Button {
-                        // TODO: Show exercise search
+                        showAddExercise = true
                     } label: {
                         Label("Add Exercise", systemImage: "plus.circle.fill")
+                            .font(.headline)
+                            .foregroundColor(.accentColor)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Theme.secondaryBackgroundColor)
@@ -40,12 +62,25 @@ struct ActiveWorkoutView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel", role: .destructive) {
+                    Button(role: .destructive) {
                         showEndWorkoutConfirmation = true
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.red)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Finish", action: finishWorkout)
+                    Button {
+                        finishWorkout()
+                    } label: {
+                        Text("Finish")
+                            .fontWeight(.semibold)
+                    }
+                }
+            }
+            .sheet(isPresented: $showAddExercise) {
+                ExerciseSearchView { exercise in
+                    // TODO: Add exercise to workout
                 }
             }
             .alert("End Workout?", isPresented: $showEndWorkoutConfirmation) {
@@ -61,5 +96,22 @@ struct ActiveWorkoutView: View {
     
     private func finishWorkout() {
         // TODO: Save workout and show post-workout view
+    }
+}
+
+// Helper Views
+struct WorkoutStatView: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.headline)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
