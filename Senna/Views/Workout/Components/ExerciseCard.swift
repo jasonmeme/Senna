@@ -97,7 +97,7 @@ struct ExerciseCard: View {
         HStack {
             Label("\(exercise.restSeconds)s", systemImage: "timer")
             Spacer()
-            Label(exercise.equipment, systemImage: "dumbbell.fill")
+            Label(exercise.equipment[0], systemImage: "dumbbell.fill")
         }
         .font(.caption)
         .foregroundStyle(.secondary)

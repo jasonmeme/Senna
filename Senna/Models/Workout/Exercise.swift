@@ -7,7 +7,7 @@ struct Exercise: Identifiable, Codable {
     var category: ExerciseCategory
     var description: String?
     var muscles: [String]
-    var equipment: String
+    var equipment: [String]
     
     // Add any other base exercise properties
     
@@ -21,7 +21,7 @@ struct Exercise: Identifiable, Codable {
         category: ExerciseCategory,
         description: String? = nil,
         muscles: [String] = [],
-        equipment: String = "",
+        equipment: [String] = [],
         createdAt: Date? = nil,
         updatedAt: Date? = nil
     ) {

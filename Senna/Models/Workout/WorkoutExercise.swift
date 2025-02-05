@@ -24,5 +24,5 @@ extension WorkoutExercise {
     var category: ExerciseCategory { exercise.category }
     var description: String? { exercise.description }
     var muscles: [String] { exercise.muscles }
-    var equipment: String { exercise.equipment }
+    var equipment: [String] { exercise.equipment }
 } 

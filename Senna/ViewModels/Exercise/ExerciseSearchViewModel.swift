@@ -13,8 +13,7 @@ class ExerciseSearchViewModel: ObservableObject {
         }
         return exercises.filter { exercise in
             exercise.name.localizedCaseInsensitiveContains(searchText) ||
-            exercise.muscles.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
-            exercise.equipment.localizedCaseInsensitiveContains(searchText)
+            exercise.muscles.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
         }
     }
     
@@ -33,7 +32,6 @@ class ExerciseSearchViewModel: ObservableObject {
             let snapshot = try await Firestore.firestore()
                 .collection("exercises")
                 .getDocuments()
-            
             exercises = snapshot.documents.compactMap { document in
                 try? document.data(as: Exercise.self)
             }

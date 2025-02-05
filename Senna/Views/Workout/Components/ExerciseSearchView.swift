@@ -59,7 +59,7 @@ struct ExerciseRow: View {
             }
             
             if !exercise.equipment.isEmpty {
-                Text(exercise.equipment)
+                Text(exercise.equipment.joined(separator: ", "))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
