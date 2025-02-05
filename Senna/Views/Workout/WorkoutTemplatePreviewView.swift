@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WorkoutTemplatePreviewView: View {
-    let template: WorkoutTemplate
+    let workout: Workout
     @State private var showActiveWorkout = false
     
     var body: some View {
@@ -9,25 +9,25 @@ struct WorkoutTemplatePreviewView: View {
             VStack(spacing: Theme.spacing) {
                 // Template Info
                 VStack(alignment: .leading, spacing: Theme.spacing/2) {
-                    Text(template.name)
+                    Text(workout.name)
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    if !template.description.isEmpty {
-                        Text(template.description)
+                    if let description = workout.description {
+                        Text(description)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(Theme.secondaryBackgroundColor)
-                .cornerRadius(Theme.cornerRadius)
+                .cardStyle()
                 
                 // Exercise Preview List
                 LazyVStack(spacing: Theme.spacing) {
-                    ForEach(template.exercises) { exercise in
-                        ExercisePreviewRow(exercise: exercise)
+                    ForEach(workout.exercises) { exercise in
+                        ExerciseCard(
+                            exercise: .constant(exercise),
+                            onDelete: nil
+                        )
                     }
                 }
                 
@@ -38,19 +38,15 @@ struct WorkoutTemplatePreviewView: View {
                     Label("Start Workout", systemImage: "play.circle.fill")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Theme.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(Theme.cornerRadius)
+                        .primaryButtonStyle()
                 }
-                .padding(.top)
             }
             .padding()
         }
         .navigationTitle("Workout Preview")
         .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(isPresented: $showActiveWorkout) {
-            ActiveWorkoutView(template: template)
+            WorkoutView(viewModel: WorkoutViewModel(template: workout))
         }
     }
 }

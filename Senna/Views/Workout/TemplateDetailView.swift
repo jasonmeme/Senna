@@ -1,83 +1,105 @@
 import SwiftUI
 
 struct TemplateDetailView: View {
-    let template: WorkoutTemplate
+    @StateObject private var viewModel: TemplateViewModel
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: TemplateDetailViewModel
-    @State private var showAddExercise = false
+    @State private var showExerciseSearch = false
+    @State private var showingError = false
     
-    init(template: WorkoutTemplate) {
-        self.template = template
-        _viewModel = StateObject(wrappedValue: TemplateDetailViewModel(template: template))
+    init(template: Workout?) {
+        _viewModel = StateObject(wrappedValue: TemplateViewModel(template: template))
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: Theme.spacing) {
-                // Template Info
-                VStack(alignment: .leading, spacing: Theme.spacing/2) {
-                    TextField("Template Name", text: $viewModel.templateName)
-                        .font(.title2)
-                        .fontWeight(.bold)
+        NavigationView {
+            ScrollView {
+                VStack(spacing: Theme.spacing) {
+                    // Template Info
+                    templateInfoSection
                     
-                    TextField("Add a description (optional)", text: $viewModel.templateDescription)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    // Exercises
+                    exercisesSection
+                    
+                    // Add Exercise Button
+                    addExerciseButton
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
-                .background(Theme.secondaryBackgroundColor)
-                .cornerRadius(Theme.cornerRadius)
+            }
+            .navigationTitle(viewModel.template.name.isEmpty ? "New Template" : viewModel.template.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
                 
-                // Exercises List
-                LazyVStack(spacing: Theme.spacing) {
-                    ForEach(viewModel.exercises) { exercise in
-                        ExerciseCard(exercise: exercise) {
-                            if let index = viewModel.exercises.firstIndex(where: { $0.id == exercise.id }) {
-                                viewModel.removeExercise(at: index)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        Task {
+                            do {
+                                try await viewModel.saveTemplate()
+                                dismiss()
+                            } catch {
+                                showingError = true
                             }
                         }
                     }
-                    .onMove { from, to in
-                        viewModel.moveExercise(from: from, to: to)
-                    }
-                }
-                
-                // Add Exercise Button
-                Button {
-                    showAddExercise = true
-                } label: {
-                    Label("Add Exercise", systemImage: "plus.circle.fill")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Theme.secondaryBackgroundColor)
-                        .cornerRadius(Theme.cornerRadius)
+                    .disabled(!viewModel.isValid)
                 }
             }
-            .padding()
         }
-        .navigationTitle("Template Details")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Save", action: saveTemplate)
-            }
-        }
-        .sheet(isPresented: $showAddExercise) {
+        .sheet(isPresented: $showExerciseSearch) {
             ExerciseSearchView { exercise in
                 viewModel.addExercise(exercise)
             }
         }
+        .alert("Error", isPresented: $showingError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Failed to save template. Please try again.")
+        }
     }
     
-    private func saveTemplate() {
-        Task {
-            do {
-                try await viewModel.saveTemplate()
-                dismiss()
-            } catch {
-                print("Error saving template: \(error)")
+    private var templateInfoSection: some View {
+        VStack(alignment: .leading, spacing: Theme.spacing) {
+            TextField("Template Name", text: $viewModel.template.name)
+                .font(.title2)
+                .textFieldStyle(.roundedBorder)
+            
+            TextField("Description (Optional)", text: Binding(
+                get: { viewModel.template.notes ?? "" },
+                set: { viewModel.template.notes = $0.isEmpty ? nil : $0 }
+            ))
+            .textFieldStyle(.roundedBorder)
+        }
+    }
+    
+    private var exercisesSection: some View {
+        LazyVStack(spacing: Theme.spacing) {
+            ForEach($viewModel.template.exercises) { $exercise in
+                ExerciseCard(
+                    exercise: $exercise,
+                    onDelete: {
+                        if let index = viewModel.template.exercises.firstIndex(where: { $0.id == exercise.id }) {
+                            viewModel.removeExercise(at: index)
+                        }
+                    }
+                )
             }
+            .onMove { from, to in
+                viewModel.moveExercise(from: from, to: to)
+            }
+        }
+    }
+    
+    private var addExerciseButton: some View {
+        Button {
+            showExerciseSearch = true
+        } label: {
+            Label("Add Exercise", systemImage: "plus.circle.fill")
+                .frame(maxWidth: .infinity)
+                .secondaryButtonStyle()
         }
     }
 } 

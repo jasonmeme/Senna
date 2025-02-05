@@ -52,13 +52,17 @@ struct ExerciseRow: View {
                     .font(.headline)
             }
             
-            Text(exercise.muscles.joined(separator: ", "))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if !exercise.muscles.isEmpty {
+                Text(exercise.muscles.joined(separator: ", "))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             
-            Text(exercise.equipment.joined(separator: ", "))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            if !exercise.equipment.isEmpty {
+                Text(exercise.equipment)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(.vertical, 4)
     }

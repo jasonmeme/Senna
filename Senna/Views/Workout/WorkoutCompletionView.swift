@@ -2,142 +2,78 @@ import SwiftUI
 import PhotosUI
 
 struct WorkoutCompletionView: View {
-    @StateObject private var viewModel: WorkoutCompletionViewModel
+    @StateObject var viewModel: WorkoutViewModel
     @Environment(\.dismiss) private var dismiss
-    
-    init(workout: ActiveWorkoutViewModel) {
-        _viewModel = StateObject(wrappedValue: WorkoutCompletionViewModel(workout: workout))
-    }
+    @State private var showingError = false
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
-                VStack(spacing: Theme.spacing * 2) {
+                VStack(spacing: Theme.spacing) {
+                    // Workout Stats
                     statsSection
                     
-                    // Main Content
-                    VStack(spacing: Theme.spacing) {
-                        titleSection
-                        
-                        Divider()
-                        
-                        workoutDetailsSection
-                        
-                        Divider()
-                        
-                        photoSection
-                        
-                        Divider()
-                        
-                        moodSection
-                        
-                        Divider()
-                        
-                        locationSection
-                        
-                        Divider()
-                        
-                        taggingSection
-                    }
-                    .padding(.horizontal, 24)
+                    // Exercises Summary
+                    exercisesSection
+                    
+                    // Rating
+                    moodSection
+                    
+                    // Notes & Location
+                    notesSection
+                    locationSection
+                    
+                    // Save Button
+                    saveButton
                 }
+                .padding()
             }
+            .navigationTitle("Workout Complete")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Workout Summary")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save Draft") {
-                        // TODO: Implement save draft
-                    }
-                }
             }
-            
-            // Bottom Action Button
-            VStack {
-                Divider()
-                Button {
-                    // TODO: Implement post workout
-                } label: {
-                    Text("Post Workout")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Theme.accentColor)
-                        .cornerRadius(Theme.cornerRadius)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                }
-            }
-            .background(Theme.backgroundColor)
         }
     }
     
     private var statsSection: some View {
-        VStack(spacing: Theme.spacing) {
-            HStack(spacing: Theme.spacing * 2) {
-                StatItemView(title: "Duration", value: viewModel.formattedDuration)
-                Divider().frame(height: 30)
-                StatItemView(title: "Exercises", value: "\(viewModel.exerciseCount)")
-                Divider().frame(height: 30)
-                StatItemView(title: "Total Sets", value: "\(viewModel.totalSets)")
-            }
-            .padding()
-            .background(Theme.secondaryBackgroundColor)
-            .cornerRadius(Theme.cornerRadius)
-        }
-        .padding(.horizontal, 24)
-    }
-    
-    private var titleSection: some View {
         VStack(alignment: .leading, spacing: Theme.spacing) {
-            Text("Workout Title")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            TextField("Enter workout title", text: $viewModel.workoutTitle)
-                .font(.body)
-                .textFieldStyle(CustomRoundedBorderStyle())
-        }
-    }
-    
-    private var workoutDetailsSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing) {
-            Text("Notes")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            TextEditor(text: $viewModel.notes)
-                .font(.body)
-                .frame(height: 120)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                        .stroke(Color.gray.opacity(0.5), lineWidth: 1.5)
-                )
-        }
-    }
-    
-    private var photoSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing/2) {
-            Text("Photos")
+            Text("Workout Stats")
                 .font(.headline)
                 .foregroundStyle(.secondary)
             
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Theme.spacing) {
-                    ForEach(0..<3) { index in
-                        PhotoPickerButton(
-                            selectedItem: $viewModel.selectedPhotos[index],
-                            imageState: viewModel.imageStates[index]
-                        )
-                    }
-                }
+            HStack {
+                StatView(
+                    title: "Duration",
+                    value: viewModel.elapsedTime.formattedTime
+                )
+                Divider()
+                StatView(
+                    title: "Exercises",
+                    value: "\(viewModel.workout.exercises.count)"
+                )
+                Divider()
+                StatView(
+                    title: "Total Sets",
+                    value: "\(viewModel.workout.exercises.reduce(0) { $0 + $1.sets.count })"
+                )
+            }
+            .cardStyle()
+        }
+    }
+    
+    private var exercisesSection: some View {
+        VStack(alignment: .leading, spacing: Theme.spacing) {
+            Text("Exercises")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+            
+            ForEach($viewModel.exercises) { $exercise in
+                ExerciseCard(exercise: $exercise, onDelete: nil)
             }
         }
     }
@@ -151,41 +87,70 @@ struct WorkoutCompletionView: View {
             HStack(spacing: Theme.spacing * 1.5) {
                 ForEach(1...5, id: \.self) { rating in
                     Button {
-                        viewModel.selectedMood = rating
+                        viewModel.rating = rating
                     } label: {
-                        Image(systemName: rating <= viewModel.selectedMood ? "star.fill" : "star")
+                        Image(systemName: rating <= (viewModel.rating ?? 0) ? "star.fill" : "star")
                             .font(.title)
-                            .foregroundColor(rating <= viewModel.selectedMood ? .yellow : .gray.opacity(0.3))
+                            .foregroundColor(rating <= (viewModel.rating ?? 0) ? .yellow : .gray.opacity(0.3))
                     }
                 }
             }
+            .cardStyle()
+        }
+    }
+    
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: Theme.spacing/2) {
+            Text("Notes")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+            
+            TextField("Add workout notes", text: Binding(
+                get: { viewModel.notes ?? "" },
+                set: { viewModel.notes = $0.isEmpty ? nil : $0 }
+            ))
+            .textFieldStyle(.roundedBorder)
         }
     }
     
     private var locationSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing) {
+        VStack(alignment: .leading, spacing: Theme.spacing/2) {
             Text("Location")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            TextField("Add location", text: $viewModel.location)
-                .font(.body)
-                .textFieldStyle(CustomRoundedBorderStyle())
+            
+            TextField("Add location", text: Binding(
+                get: { viewModel.location ?? "" },
+                set: { viewModel.location = $0.isEmpty ? nil : $0 }
+            ))
+            .textFieldStyle(.roundedBorder)
         }
     }
     
-    private var taggingSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing) {
-            Text("Tag Friends")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            TextField("@mention your friends", text: $viewModel.friendTags)
-                .font(.body)
-                .textFieldStyle(CustomRoundedBorderStyle())
+    private var saveButton: some View {
+        Button {
+            Task {
+                do {
+                    try await viewModel.saveWorkout()
+                    dismiss()
+                } catch {
+                    showingError = true
+                }
+            }
+        } label: {
+            Text("Save Workout")
+                .frame(maxWidth: .infinity)
+                .primaryButtonStyle()
+        }
+        .alert("Error", isPresented: $showingError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Failed to save workout. Please try again.")
         }
     }
 }
 
-struct StatItemView: View {
+private struct StatView: View {
     let title: String
     let value: String
     
@@ -238,3 +203,4 @@ struct CustomRoundedBorderStyle: TextFieldStyle {
             )
     }
 } 
+

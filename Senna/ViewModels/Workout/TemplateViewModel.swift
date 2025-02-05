@@ -1,11 +1,11 @@
 import SwiftUI
 import FirebaseFirestore
-import FirebaseAuth
 
 @MainActor
-class TemplateDetailViewModel: ObservableObject {
+class TemplateViewModel: ObservableObject {
     @Published var template: Workout
     private let db = Firestore.firestore()
+    private let authManager = AuthenticationManager.shared
     
     var isValid: Bool {
         !template.name.isEmpty && !template.exercises.isEmpty
@@ -15,7 +15,6 @@ class TemplateDetailViewModel: ObservableObject {
         if let template = template {
             self.template = template
         } else {
-            // Create new template
             self.template = Workout(
                 id: UUID().uuidString,
                 name: "",
@@ -39,12 +38,12 @@ class TemplateDetailViewModel: ObservableObject {
     }
     
     func saveTemplate() async throws {
-        guard let userId = Auth.auth().currentUser?.uid else {
-            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not logged in"])
+        guard let user = try? authManager.getUser() else {
+            throw AuthenticationError.notAuthenticated
         }
         
-        template.creatorId = userId
-        template.creatorName = Auth.auth().currentUser?.displayName ?? "Unknown"
+        template.creatorId = user.uid
+        template.creatorName = user.displayName ?? "Unknown"
         
         let docRef = db.collection("workoutTemplates").document(template.id)
         try await docRef.setData(template.asDictionary())

@@ -1,7 +1,7 @@
 import Foundation
 
 struct SetData: Identifiable, Codable {
-    var id: String
+    let id: String
     var weight: Double
     var reps: Int
     var isCompleted: Bool

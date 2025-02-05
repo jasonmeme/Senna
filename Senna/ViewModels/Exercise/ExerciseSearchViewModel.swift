@@ -1,11 +1,11 @@
-import Foundation
+import SwiftUI
 import FirebaseFirestore
 
 @MainActor
 class ExerciseSearchViewModel: ObservableObject {
     @Published var exercises: [Exercise] = []
     @Published var searchText = ""
-    @Published var isLoading = false
+    @Published private(set) var isLoading = false
     
     var filteredExercises: [Exercise] {
         if searchText.isEmpty {
@@ -13,8 +13,8 @@ class ExerciseSearchViewModel: ObservableObject {
         }
         return exercises.filter { exercise in
             exercise.name.localizedCaseInsensitiveContains(searchText) ||
-            exercise.muscles.contains { $0.localizedCaseInsensitiveContains(searchText) } ||
-            exercise.equipment.contains { $0.localizedCaseInsensitiveContains(searchText) }
+            exercise.muscles.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
+            exercise.equipment.localizedCaseInsensitiveContains(searchText)
         }
     }
     
@@ -25,6 +25,7 @@ class ExerciseSearchViewModel: ObservableObject {
     }
     
     func fetchExercises() async {
+        guard !isLoading else { return }
         isLoading = true
         defer { isLoading = false }
         

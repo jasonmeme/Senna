@@ -4,7 +4,9 @@ import FirebaseCore
 import FirebaseFirestore
 
 @MainActor
-class AuthenticationManager: ObservableObject {
+final class AuthenticationManager: ObservableObject {
+    static let shared = AuthenticationManager()
+    
     @Published var isAuthenticated = false
     @Published var currentUser: User?
     @Published var isLoading = false
@@ -12,7 +14,7 @@ class AuthenticationManager: ObservableObject {
     @Published var isProfileComplete = false
     @Published var isInitializing = true
     
-    init() {
+    private init() {
         setupFirebaseAuthStateListener()
     }
     
@@ -29,6 +31,13 @@ class AuthenticationManager: ObservableObject {
             }
             self?.isInitializing = false
         }
+    }
+    
+    func getUser() throws -> User {
+        guard let user = Auth.auth().currentUser else {
+            throw AuthenticationError.notAuthenticated
+        }
+        return user
     }
     
     func signInWithEmail(email: String, password: String) async throws {

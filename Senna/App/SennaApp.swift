@@ -20,7 +20,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct SennaApp: App {
-    @StateObject private var authManager = AuthenticationManager()
+    @StateObject private var authManager = AuthenticationManager.shared
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     var body: some Scene {
