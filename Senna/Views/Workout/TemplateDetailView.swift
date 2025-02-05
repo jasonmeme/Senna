@@ -62,17 +62,22 @@ struct TemplateDetailView: View {
     }
     
     private var templateInfoSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing) {
+        VStack(alignment: .leading, spacing: Theme.spacing/2) {
             TextField("Template Name", text: $viewModel.template.name)
                 .font(.title2)
-                .textFieldStyle(.roundedBorder)
+                .fontWeight(.bold)
             
-            TextField("Description (Optional)", text: Binding(
+            TextField("Add a description (optional)", text: Binding(
                 get: { viewModel.template.notes ?? "" },
                 set: { viewModel.template.notes = $0.isEmpty ? nil : $0 }
             ))
-            .textFieldStyle(.roundedBorder)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Theme.secondaryBackgroundColor)
+        .cornerRadius(Theme.cornerRadius)
     }
     
     private var exercisesSection: some View {

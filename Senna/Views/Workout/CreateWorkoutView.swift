@@ -61,7 +61,8 @@ struct CreateWorkoutView: View {
                         .font(.title2)
                 }
                 .padding()
-                .background(Theme.secondaryBackgroundColor)
+                .background(Theme.accentColor)
+                .foregroundColor(.white)
                 .cornerRadius(Theme.cornerRadius)
             }
             .buttonStyle(.plain)
