@@ -5,28 +5,38 @@ struct WorkoutCompletionView: View {
     @StateObject var viewModel: WorkoutViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingError = false
+    @State private var workoutTitle: String
+    
+    init(viewModel: WorkoutViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        // Set initial title based on time of day
+        let hour = Calendar.current.component(.hour, from: Date())
+        let timePrefix = switch hour {
+        case 5..<12: "Morning"
+        case 12..<17: "Afternoon"
+        case 17..<21: "Evening"
+        default: "Night"
+        }
+        _workoutTitle = State(initialValue: "\(timePrefix) \(viewModel.workout.name)")
+    }
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: Theme.spacing) {
-                    // Workout Stats
-                    statsSection
-                    
-                    // Exercises Summary
-                    exercisesSection
-                    
-                    // Rating
-                    moodSection
-                    
-                    // Notes & Location
-                    notesSection
-                    locationSection
-                    
-                    // Save Button
-                    saveButton
+            ZStack(alignment: .bottom) {
+                ScrollView {
+                    VStack(spacing: Theme.spacing) {
+                        statsSection
+                        titleSection
+                        storySection
+                        locationSection
+                        friendsSection
+                        moodSection
+                        exercisesSection
+                    }
+                    .padding()
+                    .padding(.bottom, 100)
                 }
-                .padding()
+                saveButton
             }
             .navigationTitle("Workout Complete")
             .navigationBarTitleDisplayMode(.inline)
@@ -39,31 +49,93 @@ struct WorkoutCompletionView: View {
             }
         }
     }
+
+    private var saveButton: some View {
+        Button {
+            Task {
+                do {
+                    try await viewModel.saveWorkout()
+                    dismiss()
+                } catch {
+                    showingError = true
+                }
+            }
+        } label: {
+            Text("Post Workout")
+                .font(.body.weight(.medium))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                        .fill(Theme.accentColor)
+                )
+                .padding(.horizontal, 24)
+        }
+        .padding(.vertical, 16)
+        .background(.white)
+        .alert("Error", isPresented: $showingError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Failed to save workout. Please try again.")
+        }
+    }
+    
+    private var titleSection: some View {
+        CustomTextField(
+            text: $workoutTitle,
+            placeholder: "Name your workout"
+        )
+    }
+    
+    private var storySection: some View {
+        CustomTextEditor(
+            text: Binding(
+                get: { viewModel.notes ?? "" },
+                set: { viewModel.notes = $0.isEmpty ? nil : $0 }
+            ),
+            placeholder: "Add your workout story"
+        )
+    }
+    
+    private var locationSection: some View {
+        CustomTextField(
+            text: Binding(
+                get: { viewModel.location ?? "" },
+                set: { viewModel.location = $0.isEmpty ? nil : $0 }
+            ),
+            placeholder: "Where did you train?"
+        )
+    }
+    
+    private var friendsSection: some View {
+        CustomTextField(
+            text: Binding(
+                get: { viewModel.friends ?? "" },
+                set: { viewModel.friends = $0.isEmpty ? nil : $0 }
+            ),
+            placeholder: "Tag your workout buddies"
+        )
+    }
     
     private var statsSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing) {
-            Text("Workout Stats")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            
-            HStack {
-                StatView(
-                    title: "Duration",
-                    value: viewModel.elapsedTime.formattedTime
-                )
-                Divider()
-                StatView(
-                    title: "Exercises",
-                    value: "\(viewModel.workout.exercises.count)"
-                )
-                Divider()
-                StatView(
-                    title: "Total Sets",
-                    value: "\(viewModel.workout.exercises.reduce(0) { $0 + $1.sets.count })"
-                )
-            }
-            .cardStyle()
+        HStack {
+            StatView(
+                title: "Duration",
+                value: viewModel.elapsedTime.formattedTime
+            )
+            Divider()
+            StatView(
+                title: "Exercises",
+                value: "\(viewModel.workout.exercises.count)"
+            )
+            Divider()
+            StatView(
+                title: "Total Sets",
+                value: "\(viewModel.workout.exercises.reduce(0) { $0 + $1.sets.count })"
+            )
         }
+        .cardStyle()
     }
     
     private var exercisesSection: some View {
@@ -98,55 +170,23 @@ struct WorkoutCompletionView: View {
             .cardStyle()
         }
     }
+}
+
+struct CustomTextField: View {
+    @Binding var text: String
+    let placeholder: String
+    @FocusState private var isFocused: Bool
     
-    private var notesSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing/2) {
-            Text("Notes")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            
-            TextField("Add workout notes", text: Binding(
-                get: { viewModel.notes ?? "" },
-                set: { viewModel.notes = $0.isEmpty ? nil : $0 }
-            ))
-            .textFieldStyle(.roundedBorder)
-        }
-    }
-    
-    private var locationSection: some View {
-        VStack(alignment: .leading, spacing: Theme.spacing/2) {
-            Text("Location")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            
-            TextField("Add location", text: Binding(
-                get: { viewModel.location ?? "" },
-                set: { viewModel.location = $0.isEmpty ? nil : $0 }
-            ))
-            .textFieldStyle(.roundedBorder)
-        }
-    }
-    
-    private var saveButton: some View {
-        Button {
-            Task {
-                do {
-                    try await viewModel.saveWorkout()
-                    dismiss()
-                } catch {
-                    showingError = true
-                }
-            }
-        } label: {
-            Text("Save Workout")
-                .frame(maxWidth: .infinity)
-                .primaryButtonStyle()
-        }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text("Failed to save workout. Please try again.")
-        }
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .focused($isFocused)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                    .stroke(isFocused ? Theme.accentColor : Color.gray.opacity(0.5), lineWidth: 1.5)
+                    .background(Color.white)
+            )
     }
 }
 
@@ -191,16 +231,32 @@ struct PhotoPickerButton: View {
     }
 }
 
-struct CustomRoundedBorderStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                    .stroke(Color.gray.opacity(0.5), lineWidth: 1.5)
-                    .background(Color.white)
-            )
+
+struct CustomTextEditor: View {
+    @Binding var text: String
+    let placeholder: String
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            if text.isEmpty {
+                Text(placeholder)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+            }
+            
+            TextEditor(text: $text)
+                .frame(height: 100)  // Makes the text editor taller
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .focused($isFocused)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                .stroke(isFocused ? Theme.accentColor : Color.gray.opacity(0.5), lineWidth: 1.5)
+                .background(Color.white)
+        )
     }
 } 
 

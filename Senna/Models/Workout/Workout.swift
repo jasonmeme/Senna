@@ -22,6 +22,8 @@ struct Workout: Identifiable, Codable {
     // State
     var state: WorkoutState
     
+    var friends: String?
+    
     enum WorkoutState: String, Codable {
         case template
         case active
@@ -31,7 +33,7 @@ struct Workout: Identifiable, Codable {
     // Codable helpers
     private enum CodingKeys: String, CodingKey {
         case id, name, exercises, description, creatorId, creatorName
-        case startTime, endTime, duration, rating, location, notes, state
+        case startTime, endTime, duration, rating, location, notes, state, friends
     }
     
     // Custom init for creating new workouts
@@ -48,6 +50,7 @@ struct Workout: Identifiable, Codable {
         rating: Int? = nil,
         location: String? = nil,
         notes: String? = nil,
+        friends: String? = nil,
         state: WorkoutState
     ) {
         self.id = id
@@ -62,6 +65,7 @@ struct Workout: Identifiable, Codable {
         self.rating = rating
         self.location = location
         self.notes = notes
+        self.friends = friends
         self.state = state
     }
     
@@ -116,6 +120,7 @@ struct Workout: Identifiable, Codable {
             if let rating = rating { dict["rating"] = rating }
             if let location = location { dict["location"] = location }
             if let notes = notes { dict["notes"] = notes }
+            if let friends = friends { dict["friends"] = friends }
         default:
             break
         }

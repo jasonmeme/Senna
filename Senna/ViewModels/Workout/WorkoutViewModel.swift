@@ -13,6 +13,7 @@ class WorkoutViewModel: ObservableObject {
     @Published var rating: Int?
     @Published var notes: String?
     @Published var location: String?
+    @Published var friends: String?
     
     private var timer: Timer?
     private let db = Firestore.firestore()
@@ -109,14 +110,16 @@ class WorkoutViewModel: ObservableObject {
     func completeWorkout() {
         pauseTimer()
         workout.state = .completed
+        print("Workout state: \(workout.state)")
         workout.endTime = Date()
         workout.duration = elapsedTime
-        workout.rating = rating
-        workout.notes = notes
-        workout.location = location
     }
     
     func saveWorkout() async throws {
+        workout.rating = rating
+        workout.notes = notes
+        workout.location = location
+        workout.friends = friends
         guard workout.state == .completed else { return }
         
         guard let user = try? authManager.getUser() else {
