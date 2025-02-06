@@ -36,7 +36,7 @@ struct WorkoutCompletionView: View {
                     .padding()
                     .padding(.bottom, 100)
                 }
-                saveButton
+                postButton
             }
             .navigationTitle("Workout Complete")
             .navigationBarTitleDisplayMode(.inline)
@@ -50,7 +50,7 @@ struct WorkoutCompletionView: View {
         }
     }
 
-    private var saveButton: some View {
+    private var postButton: some View {
         Button {
             Task {
                 do {
